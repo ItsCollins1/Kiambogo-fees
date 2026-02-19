@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kiambogo Primary and Junior School — Fees Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#1B3A6B;--primary-dark:#122952;--primary-light:#2a5298;
+    --accent:#C8972B;
+    --green:#166534;--green-bg:#dcfce7;
+    --red:#991b1b;--red-bg:#fee2e2;
+    --yellow:#92400e;--yellow-bg:#fef3c7;
+    --bg:#EEF2F7;--white:#fff;--border:#d1dae6;
+    --text:#1e293b;--muted:#64748b;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+  /* ── LOGIN ── */
+  .login-screen{position:fixed;inset:0;background:var(--primary-dark);display:flex;align-items:center;justify-content:center;z-index:1000;}
+  .login-screen.hidden{display:none;}
+  .login-box{background:#fff;border-radius:16px;width:380px;max-width:94vw;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.4);}
+  .login-top{background:var(--primary);padding:2rem 1.75rem 1.5rem;text-align:center;border-bottom:3px solid var(--accent);}
+  .login-crest{width:56px;height:56px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto .75rem;border:3px solid rgba(255,255,255,.25);}
+  .login-top h2{font-family:'Merriweather',serif;color:#fff;font-size:1rem;line-height:1.4;}
+  .login-top p{color:rgba(255,255,255,.6);font-size:.72rem;text-transform:uppercase;letter-spacing:1.5px;margin-top:.3rem;}
+  .login-body{padding:1.75rem;}
+  .login-body label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:.4rem;}
+  .login-body input{width:100%;padding:.65rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Source Sans 3',sans-serif;font-size:.95rem;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s;margin-bottom:.35rem;}
+  .login-body input:focus{border-color:var(--primary);background:#fff;}
+  .login-err{font-size:.78rem;color:var(--red);min-height:1.1rem;margin-bottom:.75rem;}
+  .login-btn{width:100%;padding:.7rem;background:var(--primary);color:#fff;border:none;border-radius:8px;font-family:'Source Sans 3',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;transition:background .2s;}
+  .login-btn:hover{background:var(--primary-light);}
+  .login-note{text-align:center;font-size:.7rem;color:var(--muted);margin-top:1rem;}
+
+  /* ── SETUP BANNER ── */
+  .setup-banner{background:#7c3aed;color:#fff;padding:.65rem 1.5rem;font-size:.78rem;display:flex;align-items:center;gap:.75rem;justify-content:center;}
+  .setup-banner.hidden{display:none;}
+  .setup-banner a{color:#fbbf24;font-weight:700;cursor:pointer;text-decoration:underline;}
+
+  /* ── VIEWER BADGE ── */
+  .viewer-bar{background:#92400e;color:#fef3c7;padding:.4rem 1.5rem;font-size:.75rem;text-align:center;display:none;}
+  .viewer-bar.show{display:block;}
+
+  /* ── TOP BAR ── */
+  .topbar{background:var(--primary-dark);height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;border-bottom:3px solid var(--accent);position:sticky;top:0;z-index:300;box-shadow:0 2px 12px rgba(0,0,0,.25);}
+  .brand{display:flex;align-items:center;gap:.8rem;}
+  .crest{width:36px;height:36px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;border:2px solid rgba(255,255,255,.25);}
+  .brand h1{font-family:'Merriweather',serif;color:#fff;font-size:.82rem;}
+  .brand p{color:rgba(255,255,255,.5);font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;}
+  .topbar-right{display:flex;gap:.65rem;align-items:center;}
+  .yr-badge{color:rgba(255,255,255,.9);font-size:.78rem;border:1px solid rgba(255,255,255,.25);padding:.25rem .75rem;border-radius:4px;background:rgba(255,255,255,.08);font-weight:600;}
+  .role-pill{font-size:.7rem;font-weight:700;padding:.22rem .65rem;border-radius:20px;text-transform:uppercase;letter-spacing:.5px;}
+  .role-pill.admin{background:var(--accent);color:var(--primary-dark);}
+  .role-pill.viewer{background:#92400e;color:#fef3c7;}
+  .btn-logout{background:transparent;color:rgba(255,255,255,.6);border:1.5px solid rgba(255,255,255,.2);border-radius:6px;padding:.3rem .75rem;font-size:.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;transition:all .18s;}
+  .btn-logout:hover{color:#fff;border-color:rgba(255,255,255,.5);}
+
+  /* ── SYNC STATUS ── */
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;margin-right:.3rem;}
+  .sync-dot.syncing{background:#f59e0b;animation:pulse 1s infinite;}
+  .sync-dot.error{background:var(--red);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+  .sync-label{font-size:.72rem;color:rgba(255,255,255,.6);}
+
+  /* ── TABS ── */
+  .tabs-nav{background:var(--primary);display:flex;align-items:stretch;overflow-x:auto;scrollbar-width:none;border-bottom:2px solid rgba(255,255,255,.08);position:sticky;top:54px;z-index:200;}
+  .tabs-nav::-webkit-scrollbar{display:none;}
+  .tab-btn{padding:0 1rem;height:44px;border:none;background:transparent;color:rgba(255,255,255,.6);cursor:pointer;white-space:nowrap;font-family:'Source Sans 3',sans-serif;font-size:.8rem;font-weight:600;letter-spacing:.3px;border-bottom:3px solid transparent;transition:all .18s;flex-shrink:0;}
+  .tab-btn:hover{color:#fff;background:rgba(255,255,255,.07);}
+  .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(200,151,43,.1);}
+  .tab-btn.archive-tab{color:rgba(255,200,100,.7);}
+  .tab-btn.archive-tab.active{color:#fbbf24;border-bottom-color:#fbbf24;}
+
+  /* ── LAYOUT ── */
+  .main{flex:1;padding:1.5rem;max-width:1280px;width:100%;margin:0 auto;}
+  .page{display:none;}.page.active{display:block;}
+
+  /* ── LOADING OVERLAY ── */
+  .loading-overlay{position:fixed;inset:0;background:rgba(18,41,82,.5);display:flex;align-items:center;justify-content:center;z-index:900;backdrop-filter:blur(2px);}
+  .loading-overlay.hidden{display:none;}
+  .loading-box{background:#fff;border-radius:12px;padding:2rem 2.5rem;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+  .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto .85rem;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-box p{font-size:.875rem;color:var(--muted);}
+
+  /* ── OVERVIEW STATS ── */
+  .ov-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;}
+  .ov-stat{background:#fff;border-radius:10px;padding:1rem 1.25rem;border:1px solid var(--border);border-left:4px solid var(--primary);box-shadow:0 1px 4px rgba(0,0,0,.05);}
+  .ov-stat.g{border-left-color:var(--green);}.ov-stat.r{border-left-color:var(--red);}.ov-stat.a{border-left-color:var(--accent);}
+  .ov-label{font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:.35rem;}
+  .ov-num{font-family:'Merriweather',serif;font-size:1.7rem;color:var(--primary);line-height:1;}
+  .ov-stat.g .ov-num{color:var(--green);}.ov-stat.r .ov-num{color:var(--red);}.ov-stat.a .ov-num{color:#7c5c1a;font-size:1.2rem;}
+  .ov-sub{font-size:.72rem;color:var(--muted);margin-top:.25rem;}
+
+  /* ── CARDS ── */
+  .card{background:#fff;border-radius:10px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+  .card-head{background:var(--primary);padding:.85rem 1.25rem;display:flex;align-items:center;justify-content:space-between;}
+  .card-head h2{font-family:'Merriweather',serif;color:#fff;font-size:.95rem;}
+  .card-head .tag{font-size:.73rem;color:rgba(255,255,255,.65);background:rgba(255,255,255,.1);padding:.18rem .6rem;border-radius:20px;}
+
+  /* ── TABLE ── */
+  table{width:100%;border-collapse:collapse;}
+  th{background:#f1f5fb;padding:.7rem 1rem;text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;border-bottom:2px solid var(--border);}
+  td{padding:.75rem 1rem;border-bottom:1px solid #edf2f7;font-size:.875rem;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}tr:hover td{background:#f8fafc;}
+  .tbl-scroll{overflow-x:auto;}
+
+  /* ── CLASS HEADER ── */
+  .cls-hdr{background:#fff;border-radius:10px;border:1px solid var(--border);padding:1rem 1.35rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+  .cls-title{font-family:'Merriweather',serif;font-size:1.1rem;color:var(--primary);}
+  .mini-stats{display:flex;gap:1.25rem;}
+  .ms{text-align:center;}
+  .ms-num{font-family:'Merriweather',serif;font-size:1.2rem;color:var(--primary);}
+  .ms-num.g{color:var(--green);}.ms-num.r{color:var(--red);}
+  .ms-lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);}
+
+  /* ── TOOLBAR ── */
+  .toolbar{background:#fff;border:1px solid var(--border);border-radius:10px;padding:.85rem 1.1rem;display:flex;gap:.65rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+  .sb{flex:1;min-width:180px;position:relative;}
+  .sb input{width:100%;padding:.5rem .9rem .5rem 2.2rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Source Sans 3',sans-serif;font-size:.875rem;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s;}
+  .sb input:focus{border-color:var(--primary);background:#fff;}
+  .si{position:absolute;left:.7rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem;pointer-events:none;}
+  select{padding:.5rem .85rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Source Sans 3',sans-serif;font-size:.85rem;color:var(--text);background:var(--bg);outline:none;cursor:pointer;}
+  select:focus{border-color:var(--primary);}
+
+  /* ── BUTTONS ── */
+  .btn{padding:.5rem 1.05rem;border-radius:7px;border:none;cursor:pointer;font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:.85rem;display:inline-flex;align-items:center;gap:.35rem;transition:all .18s;white-space:nowrap;}
+  .btn-primary{background:var(--primary);color:#fff;}.btn-primary:hover{background:var(--primary-light);}
+  .btn-accent{background:var(--accent);color:#fff;}.btn-accent:hover{background:#b5821f;}
+  .btn-ghost{background:transparent;color:var(--muted);border:1.5px solid var(--border);}.btn-ghost:hover{border-color:var(--primary);color:var(--primary);}
+  .btn-gw{background:transparent;color:rgba(255,255,255,.7);border:1.5px solid rgba(255,255,255,.22);}.btn-gw:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-promote{background:#7c3aed;color:#fff;}.btn-promote:hover{background:#6d28d9;}
+  .btn-sm{padding:.28rem .65rem;font-size:.75rem;border-radius:5px;}
+  .btn-gs{background:var(--green-bg);color:var(--green);}.btn-gs:hover{background:#bbf7d0;}
+  .btn-rs{background:var(--red-bg);color:var(--red);}.btn-rs:hover{background:#fecaca;}
+  .btn-es{background:#dbeafe;color:#1e40af;}.btn-es:hover{background:#bfdbfe;}
+  .btn-ds{background:#f1f5f9;color:var(--muted);}.btn-ds:hover{background:var(--red-bg);color:var(--red);}
+
+  /* ── BADGES ── */
+  .badge{display:inline-flex;align-items:center;gap:.25rem;padding:.22rem .65rem;border-radius:4px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+  .bp{background:var(--green-bg);color:var(--green);}.bpa{background:var(--yellow-bg);color:var(--yellow);}.bu{background:var(--red-bg);color:var(--red);}
+
+  /* ── PROGRESS ── */
+  .pb-wrap{display:flex;align-items:center;gap:.45rem;}
+  .pb{width:65px;height:6px;background:#e2e8f0;border-radius:10px;overflow:hidden;flex-shrink:0;}
+  .pf{height:100%;border-radius:10px;transition:width .4s;}
+  .pct-lbl{font-size:.7rem;color:var(--muted);}
+
+  .sname{font-weight:700;color:var(--primary-dark);}
+  .paid-a{color:var(--green);font-weight:600;}
+  .owed-a{color:var(--red);font-weight:600;}
+  .acts{display:flex;gap:.35rem;align-items:center;}
+
+  .empty{text-align:center;padding:3rem 2rem;color:var(--muted);display:none;}
+  .empty-icon{font-size:2.2rem;margin-bottom:.65rem;}
+  .empty p{font-size:.875rem;}
+
+  /* ── MODAL ── */
+  .overlay{position:fixed;inset:0;background:rgba(18,41,82,.65);display:none;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(3px);}
+  .overlay.open{display:flex;}
+  .modal{background:#fff;border-radius:14px;width:500px;max-width:96vw;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.3);animation:rise .22s ease;}
+  @keyframes rise{from{transform:translateY(16px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .modal-head{background:var(--primary);padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+  .modal-head h3{font-family:'Merriweather',serif;color:#fff;font-size:1rem;}
+  .mc{background:rgba(255,255,255,.15);border:none;color:#fff;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:.95rem;display:flex;align-items:center;justify-content:center;}
+  .mc:hover{background:rgba(255,255,255,.25);}
+  .modal-body{padding:1.4rem;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin-bottom:.9rem;}
+  .form-row.full{grid-template-columns:1fr;}
+  .fg{display:flex;flex-direction:column;gap:.3rem;}
+  .fg label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+  .fg input,.fg select{padding:.55rem .85rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Source Sans 3',sans-serif;font-size:.875rem;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s;width:100%;}
+  .fg input:focus,.fg select:focus{border-color:var(--primary);background:#fff;}
+  .modal-foot{padding:.9rem 1.4rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.65rem;background:#f8fafc;}
+
+  /* ── PROMOTE MODAL ── */
+  .promote-box{background:#fff;border-radius:14px;width:480px;max-width:96vw;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.4);animation:rise .25s ease;}
+  .promote-head{background:#7c3aed;padding:1.1rem 1.4rem;display:flex;align-items:center;gap:.75rem;}
+  .promote-head h3{font-family:'Merriweather',serif;color:#fff;font-size:1rem;}
+  .promote-body{padding:1.5rem;}
+  .promote-body p{font-size:.9rem;color:var(--text);line-height:1.6;margin-bottom:1rem;}
+  .promote-list{background:#f8f5ff;border-radius:8px;padding:.9rem 1rem;font-size:.8rem;color:var(--muted);line-height:2;border:1px solid #e9d5ff;}
+  .promote-warn{background:var(--yellow-bg);border:1px solid #fcd34d;border-radius:8px;padding:.75rem 1rem;font-size:.8rem;color:var(--yellow);margin-top:.9rem;}
+  .promote-foot{padding:.9rem 1.4rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.65rem;background:#faf9ff;}
+
+  /* ── SETUP MODAL ── */
+  .setup-box{background:#fff;border-radius:14px;width:560px;max-width:96vw;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.4);animation:rise .25s ease;max-height:90vh;overflow-y:auto;}
+  .setup-head{background:#7c3aed;padding:1.1rem 1.4rem;display:flex;align-items:center;gap:.75rem;position:sticky;top:0;}
+  .setup-head h3{font-family:'Merriweather',serif;color:#fff;font-size:1rem;}
+  .setup-body{padding:1.5rem;}
+  .step{margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+  .step:last-child{border-bottom:none;margin-bottom:0;}
+  .step-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:var(--primary);color:#fff;border-radius:50%;font-size:.75rem;font-weight:700;margin-right:.5rem;flex-shrink:0;}
+  .step h4{font-size:.9rem;font-weight:700;color:var(--primary);margin-bottom:.5rem;display:flex;align-items:center;}
+  .step p{font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:.5rem;}
+  .step code{background:#f1f5f9;border:1px solid var(--border);border-radius:6px;padding:.5rem .75rem;font-size:.78rem;display:block;margin:.5rem 0;font-family:monospace;color:var(--primary-dark);word-break:break-all;white-space:pre-wrap;}
+  .step input{width:100%;padding:.55rem .85rem;border:1.5px solid var(--border);border-radius:7px;font-family:monospace;font-size:.82rem;color:var(--text);background:var(--bg);outline:none;margin-top:.35rem;}
+  .step input:focus{border-color:#7c3aed;background:#fff;}
+  .setup-foot{padding:.9rem 1.4rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.65rem;background:#faf9ff;position:sticky;bottom:0;}
+
+  /* ── ARCHIVE ── */
+  .archive-banner{background:linear-gradient(135deg,#78350f,#92400e);border-radius:10px;padding:1rem 1.35rem;margin-bottom:1rem;color:#fef3c7;display:flex;align-items:center;gap:.85rem;}
+  .archive-banner .icon{font-size:1.5rem;}
+  .archive-banner h3{font-family:'Merriweather',serif;font-size:.95rem;}
+  .archive-banner p{font-size:.78rem;opacity:.8;margin-top:.15rem;}
+  .cls-row{cursor:pointer;}.cls-row:hover td{background:#f0f4fb;}
+  .cls-link{color:var(--primary);font-weight:700;}
+
+  /* ── PRINT ── */
+  .print-header{display:none;}
+  @media print{
+    .login-screen,.setup-banner,.topbar-right,.tabs-nav,.toolbar,.acts,.overlay,.btn,.btn-sm,.viewer-bar{display:none!important;}
+    body{background:#fff;}
+    .topbar{position:relative;top:auto;height:auto;padding:.75rem 1.5rem;print-color-adjust:exact;-webkit-print-color-adjust:exact;}
+    .main{padding:.5rem;max-width:100%;}
+    .page{display:block!important;}
+    .card{box-shadow:none;border:1px solid #ccc;margin-bottom:1rem;page-break-inside:avoid;}
+    .ov-grid{page-break-inside:avoid;}
+    th,td{font-size:.7rem;padding:.4rem .6rem;}
+    .print-header{display:block!important;text-align:center;padding:.5rem 0 1rem;border-bottom:2px solid #C8972B;margin-bottom:1rem;}
+    .print-header h2{font-family:'Merriweather',serif;font-size:1.1rem;color:#122952;}
+    .print-header p{font-size:.75rem;color:#64748b;margin-top:.2rem;}
+  }
+  @media(max-width:768px){.ov-grid{grid-template-columns:1fr 1fr;}.main{padding:1rem;}.form-row{grid-template-columns:1fr;}.mini-stats{gap:.75rem;}}
+</style>
+</head>
+<body>
+
+<!-- ══ LOADING ══ -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <p id="loadingMsg">Connecting to database…</p>
+  </div>
+</div>
+
+<!-- ══ LOGIN ══ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-top">
+      <div class="login-crest">🏫</div>
+      <h2>Kiambogo Primary and Junior School</h2>
+      <p>Fees Management System</p>
+    </div>
+    <div class="login-body">
+      <label>Password</label>
+      <input type="password" id="loginPw" placeholder="Enter password…" onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="login-err" id="loginErr"></div>
+      <button class="login-btn" onclick="doLogin()">🔓 Sign In</button>
+      <div class="login-note">Contact your administrator if you have forgotten the password.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SETUP BANNER ══ -->
+<div class="setup-banner" id="setupBanner">
+  ⚠️ Supabase is not yet configured — data is being saved locally only.
+  <a onclick="openSetupModal()">Click here to connect your database →</a>
+</div>
+
+<!-- ══ VIEWER BAR ══ -->
+<div class="viewer-bar" id="viewerBar">
+  👁️ You are in <strong>View Only</strong> mode. You can see all records but cannot make changes.
+</div>
+
+<!-- ══ PRINT HEADER ══ -->
+<div class="print-header">
+  <h2>Kiambogo Primary and Junior School</h2>
+  <p>School Fees Report — Academic Year <span id="print-yr"></span></p>
+  <p id="print-date"></p>
+</div>
+
+<!-- ══ TOP BAR ══ -->
+<div class="topbar">
+  <div class="brand">
+    <div class="crest">🏫</div>
+    <div>
+      <h1>Kiambogo Primary and Junior School</h1>
+      <p>School Fees Management System</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="sync-dot" id="syncDot"></span>
+    <span class="sync-label" id="syncLabel">Offline</span>
+    <span class="yr-badge" id="yrBadge"></span>
+    <span class="role-pill" id="rolePill"></span>
+    <button class="btn btn-gw" onclick="exportAll()">⬇️ Export</button>
+    <button class="btn btn-gw" onclick="printReport()">🖨️ Print</button>
+    <button class="btn btn-gw admin-only" onclick="openAddModal()">+ Add Student</button>
+    <button class="btn-logout" onclick="doLogout()">Sign Out</button>
+  </div>
+</div>
+
+<!-- ══ TABS ══ -->
+<nav class="tabs-nav" id="tabsNav"></nav>
+
+<div class="main">
+
+  <!-- OVERVIEW -->
+  <div class="page active" id="page-overview">
+    <div class="ov-grid">
+      <div class="ov-stat"><div class="ov-label">Total Students</div><div class="ov-num" id="ov-total">0</div><div class="ov-sub">Active classes</div></div>
+      <div class="ov-stat g"><div class="ov-label">Fully Paid</div><div class="ov-num" id="ov-paid">0</div><div class="ov-sub" id="ov-paid-pct">—</div></div>
+      <div class="ov-stat r"><div class="ov-label">Unpaid / Partial</div><div class="ov-num" id="ov-unpaid">0</div><div class="ov-sub" id="ov-unpaid-pct">—</div></div>
+      <div class="ov-stat a"><div class="ov-label">Total Outstanding</div><div class="ov-num" id="ov-owed">KSh 0</div><div class="ov-sub">Balance owed</div></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;" class="admin-only">
+      <button class="btn btn-promote" onclick="openPromoteModal()">🎓 Promote All Students to Next Year</button>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>📊 All Classes Summary</h2><span class="tag">Click a class to view students</span></div>
+      <div class="tbl-scroll">
+        <table>
+          <thead><tr><th>Class</th><th>Students</th><th>Fully Paid</th><th>Unpaid / Partial</th><th>Collected</th><th>Outstanding</th><th>Collection Rate</th></tr></thead>
+          <tbody id="ov-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLASS PAGES -->
+  <div id="cls-pages"></div>
+
+  <!-- ARCHIVE PAGE -->
+  <div class="page" id="page-archive">
+    <div class="archive-banner">
+      <div class="icon">📦</div>
+      <div>
+        <h3>Archived Students — Graduated Grade 9</h3>
+        <p>These students completed Grade 9 and have been moved out of active classes. Records are kept permanently.</p>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="sb"><span class="si">🔍</span><input type="text" id="arch-search" placeholder="Search archived students…" oninput="renderArchive()"></div>
+      <button class="btn btn-ghost" onclick="exportArchive()">⬇️ Export CSV</button>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>📦 Archived Students</h2><span class="tag" id="arch-count">0 records</span></div>
+      <div class="tbl-scroll">
+        <table>
+          <thead><tr><th>#</th><th>Name</th><th>Adm. No.</th><th>Parent Phone</th><th>Year Graduated</th><th>Total Fees</th><th>Amount Paid</th><th>Balance</th><th>Status</th></tr></thead>
+          <tbody id="arch-tbody"></tbody>
+        </table>
+        <div class="empty" id="arch-empty"><div class="empty-icon">📦</div><p>No archived students yet.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADD/EDIT MODAL ══ -->
+<div class="overlay" id="overlay" onclick="bgClose(event)">
+  <div class="modal">
+    <div class="modal-head"><h3 id="modal-title">Add New Student</h3><button class="mc" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row full"><div class="fg"><label>Student Full Name *</label><input type="text" id="f-name" placeholder="e.g. Jane Wanjiku Kamau"></div></div>
+      <div class="form-row">
+        <div class="fg"><label>Class / Grade *</label><select id="f-class"></select></div>
+        <div class="fg"><label>Admission No.</label><input type="text" id="f-adm" placeholder="e.g. 2024/031"></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label>Total Fees Required (KSh) *</label><input type="number" id="f-total" placeholder="e.g. 45000" min="0"></div>
+        <div class="fg"><label>Amount Already Paid (KSh)</label><input type="number" id="f-paid" placeholder="0" min="0" value="0"></div>
+      </div>
+      <div class="form-row full"><div class="fg"><label>Parent / Guardian Phone</label><input type="tel" id="f-phone" placeholder="e.g. 0712 345 678"></div></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStudent()">💾 Save Record</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PROMOTE MODAL ══ -->
+<div class="overlay" id="promoteOverlay" onclick="if(event.target===this)closePromoteModal()">
+  <div class="promote-box">
+    <div class="promote-head"><span style="font-size:1.4rem">🎓</span><h3>Year-End Student Promotion</h3></div>
+    <div class="promote-body">
+      <p>This will promote <strong>all active students</strong> to the next class for the new academic year:</p>
+      <div class="promote-list" id="promote-preview"></div>
+      <div class="promote-warn">⚠️ <strong>Grade 9 students</strong> will be archived. Fees reset to KSh 0 for the new year. This cannot be undone — export your data first if needed.</div>
+    </div>
+    <div class="promote-foot">
+      <button class="btn btn-ghost" onclick="closePromoteModal()">Cancel</button>
+      <button class="btn btn-promote" onclick="confirmPromote()">✅ Yes, Promote All Students</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SETUP MODAL ══ -->
+<div class="overlay" id="setupOverlay" onclick="if(event.target===this)closeSetupModal()">
+  <div class="setup-box">
+    <div class="setup-head"><span style="font-size:1.3rem">🔧</span><h3>Connect Supabase Database</h3></div>
+    <div class="setup-body">
+
+      <div class="step">
+        <h4><span class="step-num">1</span>Create a Supabase account</h4>
+        <p>Go to <strong>supabase.com</strong>, click <em>Start your project</em>, and sign up for free. Then create a new project — give it any name (e.g. "Kiambogo Fees"). Wait about 2 minutes for it to be ready.</p>
+      </div>
+
+      <div class="step">
+        <h4><span class="step-num">2</span>Create the database tables</h4>
+        <p>Inside your Supabase project, click <strong>SQL Editor</strong> in the left sidebar, then paste and run this SQL:</p>
+        <code>-- Students table
+CREATE TABLE students (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  cls TEXT NOT NULL,
+  adm TEXT,
+  total NUMERIC DEFAULT 0,
+  paid NUMERIC DEFAULT 0,
+  phone TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Archive table
+CREATE TABLE archived_students (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  cls TEXT,
+  adm TEXT,
+  total NUMERIC DEFAULT 0,
+  paid NUMERIC DEFAULT 0,
+  phone TEXT,
+  graduated_year INT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Allow public read/write (row level security off for simplicity)
+ALTER TABLE students ENABLE ROW LEVEL SECURITY;
+ALTER TABLE archived_students ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all" ON students FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all" ON archived_students FOR ALL USING (true) WITH CHECK (true);</code>
+        <p>Click the green <strong>Run</strong> button. You should see "Success".</p>
+      </div>
+
+      <div class="step">
+        <h4><span class="step-num">3</span>Get your Project URL</h4>
+        <p>Go to <strong>Project Settings → API</strong>. Copy the <em>Project URL</em> (looks like https://xxxxxx.supabase.co) and paste it below:</p>
+        <input type="text" id="setup-url" placeholder="https://xxxxxx.supabase.co">
+      </div>
+
+      <div class="step">
+        <h4><span class="step-num">4</span>Get your Anon Key</h4>
+        <p>On the same page, copy the <em>anon public</em> key (a long string starting with "eyJ…") and paste it below:</p>
+        <input type="text" id="setup-key" placeholder="eyJhbGciOiJIUzI1NiIs...">
+      </div>
+
+      <div class="step">
+        <h4><span class="step-num">5</span>Set your passwords</h4>
+        <p><strong>Admin password</strong> (full access — keep this private):</p>
+        <input type="text" id="setup-admin-pw" placeholder="e.g. Kiambogo@Admin2025">
+        <p style="margin-top:.75rem"><strong>Viewer password</strong> (read-only — safe to share):</p>
+        <input type="text" id="setup-viewer-pw" placeholder="e.g. KiambogoView2025">
+      </div>
+
+    </div>
+    <div class="setup-foot">
+      <button class="btn btn-ghost" onclick="closeSetupModal()">Cancel</button>
+      <button class="btn" style="background:#7c3aed;color:#fff" onclick="saveSetup()">💾 Save & Connect</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIG — stored in localStorage after setup
+// ══════════════════════════════════════════════
+const CLASSES     = ['Pre-Primary 1','Pre-Primary 2','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9'];
+const CFG_KEY     = 'kpjs_config_v2';
+const SESSION_KEY = 'kpjs_session_v2';
+const YEAR_KEY    = 'kpjs_year_v2';
+const LOCAL_KEY   = 'kpjs_local_v2';       // fallback local storage
+const LOCAL_ARCH  = 'kpjs_local_arch_v2';
+
+let cfg = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
+// cfg = { url, key, adminPw, viewerPw }
+
+let currentRole  = null; // 'admin' | 'viewer'
+let students     = [];
+let archived     = [];
+let activeTab    = 'overview';
+let editId       = null;
+let supabaseReady = false;
+
+// ── SUPABASE HELPERS ──
+async function sbFetch(path, options={}) {
+  if (!supabaseReady) return null;
+  const res = await fetch(cfg.url + '/rest/v1/' + path, {
+    ...options,
+    headers: {
+      'apikey': cfg.key,
+      'Authorization': 'Bearer ' + cfg.key,
+      'Content-Type': 'application/json',
+      'Prefer': options.prefer || '',
+      ...(options.headers||{})
+    }
+  });
+  if (!res.ok) { console.error('Supabase error', res.status, await res.text()); return null; }
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+async function sbGetAll(table) {
+  return await sbFetch(table + '?select=*&order=name.asc') || [];
+}
+
+async function sbUpsert(table, row) {
+  return await sbFetch(table, {
+    method:'POST', prefer:'resolution=merge-duplicates',
+    headers:{'Prefer':'resolution=merge-duplicates,return=representation'},
+    body: JSON.stringify(row)
+  });
+}
+
+async function sbDelete(table, id) {
+  return await sbFetch(table + '?id=eq.' + id, { method:'DELETE' });
+}
+
+// ── SYNC STATUS ──
+function setSyncing() {
+  document.getElementById('syncDot').className='sync-dot syncing';
+  document.getElementById('syncLabel').textContent='Syncing…';
+}
+function setSynced() {
+  document.getElementById('syncDot').className='sync-dot';
+  document.getElementById('syncLabel').textContent='Live';
+}
+function setSyncError() {
+  document.getElementById('syncDot').className='sync-dot error';
+  document.getElementById('syncLabel').textContent='Offline';
+}
+
+// ── PERSIST (local fallback + cloud) ──
+function persistLocal() {
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(students));
+  localStorage.setItem(LOCAL_ARCH, JSON.stringify(archived));
+}
+
+async function pushStudent(s) {
+  persistLocal();
+  if (!supabaseReady) return;
+  setSyncing();
+  const res = await sbUpsert('students', {
+    id:s.id, name:s.name, cls:s.cls, adm:s.adm||'',
+    total:s.total, paid:s.paid, phone:s.phone||''
+  });
+  res ? setSynced() : setSyncError();
+}
+
+async function deleteStudent(id) {
+  students = students.filter(s=>s.id!==id);
+  persistLocal();
+  if (!supabaseReady) return;
+  setSyncing();
+  const res = await sbDelete('students', id);
+  res!==null ? setSynced() : setSyncError();
+}
+
+async function pushArchive(s) {
+  persistLocal();
+  if (!supabaseReady) return;
+  await sbUpsert('archived_students', {
+    id:s.id, name:s.name, cls:s.cls, adm:s.adm||'',
+    total:s.total, paid:s.paid, phone:s.phone||'',
+    graduated_year:s.graduatedYear||getCurrentYear()
+  });
+}
+
+// ── LOAD DATA ──
+async function loadData() {
+  if (supabaseReady) {
+    setSyncing();
+    const [s, a] = await Promise.all([sbGetAll('students'), sbGetAll('archived_students')]);
+    if (s!==null) {
+      students = s.map(r=>({id:r.id,name:r.name,cls:r.cls,adm:r.adm,total:Number(r.total),paid:Number(r.paid),phone:r.phone}));
+      archived = (a||[]).map(r=>({id:r.id,name:r.name,cls:r.cls,adm:r.adm,total:Number(r.total),paid:Number(r.paid),phone:r.phone,graduatedYear:r.graduated_year}));
+      persistLocal();
+      setSynced();
+    } else {
+      setSyncError();
+      loadLocalFallback();
+    }
+  } else {
+    loadLocalFallback();
+    setSyncError();
+  }
+}
+
+function loadLocalFallback() {
+  students = JSON.parse(localStorage.getItem(LOCAL_KEY)||'[]');
+  archived = JSON.parse(localStorage.getItem(LOCAL_ARCH)||'[]');
+}
+
+// ══════════════════════════════════════════════
+// SETUP
+// ══════════════════════════════════════════════
+function openSetupModal() { document.getElementById('setupOverlay').classList.add('open'); }
+function closeSetupModal() { document.getElementById('setupOverlay').classList.remove('open'); }
+
+function saveSetup() {
+  const url    = document.getElementById('setup-url').value.trim().replace(/\/$/,'');
+  const key    = document.getElementById('setup-key').value.trim();
+  const adminPw  = document.getElementById('setup-admin-pw').value.trim();
+  const viewerPw = document.getElementById('setup-viewer-pw').value.trim();
+
+  if (!url || !key)     { alert('Please enter both the Supabase URL and key.'); return; }
+  if (!adminPw)         { alert('Please set an admin password.'); return; }
+  if (!viewerPw)        { alert('Please set a viewer password.'); return; }
+  if (adminPw===viewerPw){ alert('Admin and viewer passwords must be different.'); return; }
+
+  cfg = { url, key, adminPw, viewerPw };
+  localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+  closeSetupModal();
+  document.getElementById('setupBanner').classList.add('hidden');
+  supabaseReady = true;
+  loadData().then(refreshAll);
+  alert('✅ Supabase connected! Your data will now sync to the cloud.');
+}
+
+// ══════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════
+function getAdminPw()  { return cfg.adminPw  || 'kiambogo2025'; }
+function getViewerPw() { return cfg.viewerPw || 'kiambogoview'; }
+
+function doLogin() {
+  const pw = document.getElementById('loginPw').value;
+  if (pw === getAdminPw())  { setRole('admin');  } 
+  else if (pw === getViewerPw()) { setRole('viewer'); }
+  else {
+    document.getElementById('loginErr').textContent = '✕ Incorrect password. Please try again.';
+    document.getElementById('loginPw').value='';
+    document.getElementById('loginPw').focus();
+    return;
+  }
+  document.getElementById('loginPw').value='';
+  document.getElementById('loginErr').textContent='';
+}
+
+function setRole(role) {
+  currentRole = role;
+  sessionStorage.setItem(SESSION_KEY, role);
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('rolePill').textContent = role==='admin'?'Admin':'View Only';
+  document.getElementById('rolePill').className = 'role-pill '+(role==='admin'?'admin':'viewer');
+  document.getElementById('viewerBar').className = role==='viewer'?'viewer-bar show':'viewer-bar';
+
+  // Hide admin-only elements for viewers
+  document.querySelectorAll('.admin-only').forEach(el=>{
+    el.style.display = role==='admin'?'':'none';
+  });
+
+  showLoading('Loading student records…');
+  loadData().then(()=>{
+    refreshAll();
+    hideLoading();
+    checkYearRollover();
+  });
+}
+
+function doLogout() {
+  currentRole=null;
+  sessionStorage.removeItem(SESSION_KEY);
+  document.getElementById('loginScreen').classList.remove('hidden');
+}
+
+function checkAuth() {
+  const saved = sessionStorage.getItem(SESSION_KEY);
+  if (saved==='admin'||saved==='viewer') setRole(saved);
+  else hideLoading();
+}
+
+// ══════════════════════════════════════════════
+// LOADING
+// ══════════════════════════════════════════════
+function showLoading(msg='Loading…') {
+  document.getElementById('loadingMsg').textContent=msg;
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+}
+function hideLoading() { document.getElementById('loadingOverlay').classList.add('hidden'); }
+
+// ══════════════════════════════════════════════
+// YEAR
+// ══════════════════════════════════════════════
+function getCurrentYear() { return new Date().getFullYear(); }
+function getStoredYear()  { return parseInt(localStorage.getItem(YEAR_KEY)||getCurrentYear()); }
+function setStoredYear(y) { localStorage.setItem(YEAR_KEY,y); }
+
+function updateYearBadge() {
+  const y=getStoredYear();
+  document.getElementById('yrBadge').textContent=y+'/'+(y+1);
+  document.getElementById('print-yr').textContent=y+' / '+(y+1);
+}
+
+function checkYearRollover() {
+  if (currentRole!=='admin') return;
+  if (getCurrentYear()>getStoredYear() && students.length>0)
+    setTimeout(()=>openPromoteModal(true),600);
+}
+
+// ══════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════
+const fmt    = n => 'KSh '+Number(n||0).toLocaleString();
+const pct    = (p,t) => t>0?Math.min(100,Math.round(p/t*100)):0;
+const status = (p,t) => p>=t&&t>0?'paid':p>0?'partial':'unpaid';
+
+// ══════════════════════════════════════════════
+// BUILD UI
+// ══════════════════════════════════════════════
+function buildNav() {
+  const nav=document.getElementById('tabsNav');
+  let html=`<button class="tab-btn active" data-t="overview" onclick="switchTab('overview')">📊 Overview</button>`;
+  CLASSES.forEach((c,i)=>{ html+=`<button class="tab-btn" data-t="c${i}" onclick="switchTab('c${i}')">${c}</button>`; });
+  html+=`<button class="tab-btn archive-tab" data-t="archive" onclick="switchTab('archive')">📦 Archive</button>`;
+  nav.innerHTML=html;
+}
+
+function buildPages() {
+  document.getElementById('cls-pages').innerHTML=CLASSES.map((cls,i)=>`
+    <div class="page" id="page-c${i}">
+      <div class="cls-hdr">
+        <div class="cls-title">🏫 ${cls}</div>
+        <div class="mini-stats">
+          <div class="ms"><div class="ms-num" id="mn-t${i}">0</div><div class="ms-lbl">Students</div></div>
+          <div class="ms"><div class="ms-num g" id="mn-p${i}">0</div><div class="ms-lbl">Paid</div></div>
+          <div class="ms"><div class="ms-num r" id="mn-u${i}">0</div><div class="ms-lbl">Unpaid</div></div>
+          <div class="ms"><div class="ms-num" style="color:#7c5c1a;font-size:.95rem" id="mn-o${i}">KSh 0</div><div class="ms-lbl">Outstanding</div></div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="sb"><span class="si">🔍</span><input type="text" id="sq${i}" placeholder="Search students…" oninput="renderClass(${i})"></div>
+        <select id="sf${i}" onchange="renderClass(${i})">
+          <option value="">All Statuses</option>
+          <option value="paid">Paid</option>
+          <option value="partial">Partial</option>
+          <option value="unpaid">Unpaid</option>
+        </select>
+        <button class="btn btn-ghost" onclick="exportClass(${i})">⬇️ Export</button>
+        <button class="btn btn-accent admin-only" onclick="openAddModal(${i})">+ Add Student</button>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>${cls} — Students</h2><span class="tag" id="rc${i}">0 records</span></div>
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr><th>#</th><th>Name</th><th>Adm. No.</th><th>Parent Phone</th><th>Amount Paid</th><th>Balance Owed</th><th>Progress</th><th>Status</th><th class="admin-only">Actions</th></tr></thead>
+            <tbody id="tb${i}"></tbody>
+          </table>
+          <div class="empty" id="em${i}"><div class="empty-icon">📂</div><p>No students yet in ${cls}.</p></div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function buildClassDropdown() {
+  document.getElementById('f-class').innerHTML=
+    `<option value="">— Select Class —</option>`+
+    CLASSES.map(c=>`<option value="${c}">${c}</option>`).join('');
+}
+
+function refreshAll() {
+  updateYearBadge();
+  renderOverview();
+  CLASSES.forEach((_,i)=>renderClass(i));
+  renderArchive();
+}
+
+// ══════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════
+function switchTab(t) {
+  activeTab=t;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.t===t));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+t).classList.add('active');
+  if(t==='overview') renderOverview();
+  else if(t==='archive') renderArchive();
+  else renderClass(parseInt(t.slice(1)));
+}
+
+// ══════════════════════════════════════════════
+// RENDER OVERVIEW
+// ══════════════════════════════════════════════
+function renderOverview() {
+  const n=students.length;
+  const pc=students.filter(s=>status(s.paid,s.total)==='paid').length;
+  const uc=n-pc;
+  const owed=students.reduce((a,s)=>a+Math.max(0,s.total-s.paid),0);
+  document.getElementById('ov-total').textContent=n;
+  document.getElementById('ov-paid').textContent=pc;
+  document.getElementById('ov-unpaid').textContent=uc;
+  document.getElementById('ov-owed').textContent=fmt(owed);
+  document.getElementById('ov-paid-pct').textContent=n?Math.round(pc/n*100)+'% of students':'—';
+  document.getElementById('ov-unpaid-pct').textContent=n?Math.round(uc/n*100)+'% of students':'—';
+
+  document.getElementById('ov-tbody').innerHTML=CLASSES.map((cls,i)=>{
+    const s=students.filter(x=>x.cls===cls);
+    const tot=s.length,pn=s.filter(x=>status(x.paid,x.total)==='paid').length,un=tot-pn;
+    const col=s.reduce((a,x)=>a+x.paid,0),out=s.reduce((a,x)=>a+Math.max(0,x.total-x.paid),0);
+    const rate=pct(col,s.reduce((a,x)=>a+x.total,0));
+    const rc=rate===100?'var(--green)':rate>=60?'#b45309':rate>0?'var(--red)':'var(--muted)';
+    return `<tr class="cls-row" onclick="switchTab('c${i}')">
+      <td><span class="cls-link">${cls}</span></td>
+      <td><strong>${tot}</strong></td>
+      <td style="color:var(--green);font-weight:600">${pn}</td>
+      <td style="color:${un>0?'var(--red)':'var(--muted)'};font-weight:${un>0?600:400}">${un}</td>
+      <td>${fmt(col)}</td>
+      <td>${out>0?`<span style="color:var(--red);font-weight:600">${fmt(out)}</span>`:`<span style="color:var(--muted)">—</span>`}</td>
+      <td><div class="pb-wrap"><div class="pb"><div class="pf" style="width:${rate}%;background:${rc}"></div></div><span class="pct-lbl" style="color:${rc}">${rate}%</span></div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// RENDER CLASS
+// ══════════════════════════════════════════════
+function renderClass(i) {
+  const cls=CLASSES[i];
+  const q=(document.getElementById('sq'+i)?.value||'').toLowerCase();
+  const fs=document.getElementById('sf'+i)?.value||'';
+  let list=students.filter(s=>s.cls===cls);
+  const n=list.length,pn=list.filter(s=>status(s.paid,s.total)==='paid').length;
+  const ow=list.reduce((a,s)=>a+Math.max(0,s.total-s.paid),0);
+  document.getElementById('mn-t'+i).textContent=n;
+  document.getElementById('mn-p'+i).textContent=pn;
+  document.getElementById('mn-u'+i).textContent=n-pn;
+  document.getElementById('mn-o'+i).textContent=fmt(ow);
+  if(q) list=list.filter(s=>s.name.toLowerCase().includes(q)||(s.adm||'').toLowerCase().includes(q)||(s.phone||'').includes(q));
+  if(fs) list=list.filter(s=>status(s.paid,s.total)===fs);
+  const tbody=document.getElementById('tb'+i);
+  const empty=document.getElementById('em'+i);
+  document.getElementById('rc'+i).textContent=list.length+' record'+(list.length!==1?'s':'');
+  if(!list.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  const isAdmin=currentRole==='admin';
+  tbody.innerHTML=list.map((s,idx)=>{
+    const st=status(s.paid,s.total),p=pct(s.paid,s.total);
+    const oa=Math.max(0,s.total-s.paid);
+    const bc=st==='paid'?'bp':st==='partial'?'bpa':'bu';
+    const bt=st==='paid'?'✓ Paid':st==='partial'?'⚠ Partial':'✗ Unpaid';
+    const pc2=p===100?'#166534':p>=50?'#b45309':'#991b1b';
+    const ip=st==='paid';
+    return `<tr>
+      <td style="color:var(--muted);font-size:.75rem;width:32px">${idx+1}</td>
+      <td><div class="sname">${s.name}</div></td>
+      <td style="color:var(--muted);font-size:.8rem">${s.adm||'—'}</td>
+      <td style="font-size:.8rem">${s.phone||'—'}</td>
+      <td class="paid-a">${fmt(s.paid)}</td>
+      <td>${oa>0?`<span class="owed-a">${fmt(oa)}</span>`:`<span style="color:var(--muted)">—</span>`}</td>
+      <td><div class="pb-wrap"><div class="pb"><div class="pf" style="width:${p}%;background:${pc2}"></div></div><span class="pct-lbl">${p}%</span></div></td>
+      <td><span class="badge ${bc}">${bt}</span></td>
+      ${isAdmin?`<td><div class="acts">
+        <button class="btn btn-sm ${ip?'btn-rs':'btn-gs'}" onclick="togglePaid('${s.id}',${i})">${ip?'↩ Unpay':'✓ Mark Paid'}</button>
+        <button class="btn btn-sm btn-es" onclick="openEditModal('${s.id}')">Edit</button>
+        <button class="btn btn-sm btn-ds" onclick="delStudent('${s.id}',${i})">✕</button>
+      </div></td>`:`<td style="color:var(--muted);font-size:.75rem">—</td>`}
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// RENDER ARCHIVE
+// ══════════════════════════════════════════════
+function renderArchive() {
+  const q=(document.getElementById('arch-search')?.value||'').toLowerCase();
+  let list=archived;
+  if(q) list=list.filter(s=>s.name.toLowerCase().includes(q)||(s.adm||'').toLowerCase().includes(q));
+  const tbody=document.getElementById('arch-tbody');
+  const empty=document.getElementById('arch-empty');
+  document.getElementById('arch-count').textContent=list.length+' record'+(list.length!==1?'s':'');
+  if(!list.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML=list.map((s,i)=>{
+    const st=status(s.paid,s.total);
+    const bc=st==='paid'?'bp':st==='partial'?'bpa':'bu';
+    const bt=st==='paid'?'✓ Paid':st==='partial'?'⚠ Partial':'✗ Unpaid';
+    return `<tr>
+      <td style="color:var(--muted);font-size:.75rem">${i+1}</td>
+      <td><div class="sname">${s.name}</div></td>
+      <td style="color:var(--muted);font-size:.8rem">${s.adm||'—'}</td>
+      <td style="font-size:.8rem">${s.phone||'—'}</td>
+      <td style="font-size:.8rem;color:#92400e;font-weight:600">${s.graduatedYear||'—'}</td>
+      <td>${fmt(s.total)}</td>
+      <td class="paid-a">${fmt(s.paid)}</td>
+      <td>${Math.max(0,s.total-s.paid)>0?`<span class="owed-a">${fmt(Math.max(0,s.total-s.paid))}</span>`:`<span style="color:var(--muted)">—</span>`}</td>
+      <td><span class="badge ${bc}">${bt}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// PROMOTE
+// ══════════════════════════════════════════════
+function openPromoteModal() {
+  document.getElementById('promote-preview').innerHTML=CLASSES.map((cls,i)=>{
+    const n=students.filter(s=>s.cls===cls).length;
+    return i===CLASSES.length-1
+      ? `📦 ${cls} (${n} students) → <strong>Archived</strong>`
+      : `➡️ ${cls} (${n} students) → ${CLASSES[i+1]}`;
+  }).join('<br>');
+  document.getElementById('promoteOverlay').classList.add('open');
+}
+function closePromoteModal() { document.getElementById('promoteOverlay').classList.remove('open'); }
+
+async function confirmPromote() {
+  closePromoteModal();
+  showLoading('Promoting students… please wait');
+  const nowYear=getCurrentYear();
+  const grade9=students.filter(s=>s.cls===CLASSES[CLASSES.length-1]);
+
+  // Archive Grade 9
+  for(const s of grade9){
+    const ar={...s,graduatedYear:nowYear};
+    archived.push(ar);
+    await pushArchive(ar);
+    if(supabaseReady) await sbDelete('students',s.id);
+  }
+
+  // Promote remaining
+  const promoted=students
+    .filter(s=>s.cls!==CLASSES[CLASSES.length-1])
+    .map(s=>({...s,cls:CLASSES[CLASSES.indexOf(s.cls)+1],paid:0}));
+
+  students=promoted;
+  for(const s of promoted) await pushStudent(s);
+
+  setStoredYear(nowYear);
+  persistLocal();
+  hideLoading();
+  refreshAll();
+  alert(`✅ Done!\n\nAll students promoted.\n${grade9.length} Grade 9 student(s) archived.\nFees reset for ${nowYear}/${nowYear+1}.`);
+}
+
+// ══════════════════════════════════════════════
+// TOGGLE PAID
+// ══════════════════════════════════════════════
+async function togglePaid(id,i) {
+  const s=students.find(x=>x.id===id);
+  if(!s) return;
+  s.paid=status(s.paid,s.total)==='paid'?0:s.total;
+  await pushStudent(s);
+  renderClass(i);
+  if(activeTab==='overview') renderOverview();
+}
+
+// ══════════════════════════════════════════════
+// MODAL — ADD / EDIT
+// ══════════════════════════════════════════════
+function openAddModal(clsIdx=null) {
+  editId=null;
+  document.getElementById('modal-title').textContent='Add New Student';
+  ['f-name','f-adm','f-phone'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-total').value='';
+  document.getElementById('f-paid').value='0';
+  if(clsIdx!==null) document.getElementById('f-class').value=CLASSES[clsIdx];
+  else if(activeTab.startsWith('c')) document.getElementById('f-class').value=CLASSES[parseInt(activeTab.slice(1))];
+  else document.getElementById('f-class').value='';
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('f-name').focus(),100);
+}
+
+function openEditModal(id) {
+  editId=id;
+  const s=students.find(x=>x.id===id);
+  document.getElementById('modal-title').textContent='Edit Student Record';
+  document.getElementById('f-name').value=s.name;
+  document.getElementById('f-class').value=s.cls;
+  document.getElementById('f-adm').value=s.adm||'';
+  document.getElementById('f-total').value=s.total;
+  document.getElementById('f-paid').value=s.paid;
+  document.getElementById('f-phone').value=s.phone||'';
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('f-name').focus(),100);
+}
+
+function closeModal() { document.getElementById('overlay').classList.remove('open'); editId=null; }
+function bgClose(e) { if(e.target===document.getElementById('overlay')) closeModal(); }
+
+async function saveStudent() {
+  const name=document.getElementById('f-name').value.trim();
+  const cls=document.getElementById('f-class').value;
+  const adm=document.getElementById('f-adm').value.trim();
+  const total=parseFloat(document.getElementById('f-total').value)||0;
+  const paid=Math.min(parseFloat(document.getElementById('f-paid').value)||0,total);
+  const phone=document.getElementById('f-phone').value.trim();
+  if(!name){alert('Please enter the student name.');return;}
+  if(!cls){alert('Please select a class.');return;}
+  if(total<=0){alert('Please enter a valid total fees amount.');return;}
+  const rec={id:editId||(Date.now().toString()+Math.random().toString(36).slice(2)),name,cls,adm,total,paid,phone};
+  if(editId) { const idx=students.findIndex(x=>x.id===editId); students[idx]=rec; }
+  else students.push(rec);
+  await pushStudent(rec);
+  closeModal();
+  renderOverview();
+  const ci=CLASSES.indexOf(cls);
+  if(ci>=0) renderClass(ci);
+  if(!editId) switchTab('c'+ci);
+}
+
+async function delStudent(id,i) {
+  if(!confirm('Remove this student record? This cannot be undone.')) return;
+  await deleteStudent(id);
+  renderClass(i); renderOverview();
+}
+
+// ══════════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════════
+function exportClass(i) {
+  const cls=CLASSES[i];
+  dlCSV([['No','Name','Class','Adm No','Parent Phone','Total Fees','Amount Paid','Balance','Status'],
+    ...students.filter(s=>s.cls===cls).map((s,idx)=>[idx+1,s.name,s.cls,s.adm||'',s.phone||'',s.total,s.paid,Math.max(0,s.total-s.paid),status(s.paid,s.total).toUpperCase()])],
+    'fees_'+cls.replace(/ /g,'_'));
+}
+function exportAll() {
+  dlCSV([['No','Name','Class','Adm No','Parent Phone','Total Fees','Amount Paid','Balance','Status'],
+    ...students.map((s,i)=>[i+1,s.name,s.cls,s.adm||'',s.phone||'',s.total,s.paid,Math.max(0,s.total-s.paid),status(s.paid,s.total).toUpperCase()])],
+    'kiambogo_fees_all');
+}
+function exportArchive() {
+  dlCSV([['No','Name','Adm No','Parent Phone','Year Graduated','Total Fees','Amount Paid','Balance','Status'],
+    ...archived.map((s,i)=>[i+1,s.name,s.adm||'',s.phone||'',s.graduatedYear||'',s.total,s.paid,Math.max(0,s.total-s.paid),status(s.paid,s.total).toUpperCase()])],
+    'kiambogo_archived');
+}
+function dlCSV(rows,name) {
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n'));
+  a.download=name+'_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+}
+function printReport() {
+  document.getElementById('print-date').textContent='Printed: '+new Date().toLocaleDateString('en-KE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  window.print();
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+// Check if Supabase is configured
+if(cfg.url && cfg.key) {
+  supabaseReady=true;
+  document.getElementById('setupBanner').classList.add('hidden');
+} else {
+  // Load local data immediately so app works offline
+  loadLocalFallback();
+}
+
+buildNav();
+buildPages();
+buildClassDropdown();
+updateYearBadge();
+checkAuth(); // auto-login if session exists, else show login screen + hide loader
+// If not auto-logged in, hide loader after a tick
+setTimeout(()=>{ if(!currentRole) hideLoading(); },200);
+</script>
+</body>
+</html>
